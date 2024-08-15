@@ -1,0 +1,13 @@
+.colorPicker {
+  background-color: transparent !important;
+  :global {
+    #rbgcp-input,
+    #rbgcp-hex-input {
+      --tw-text-opacity: 1;
+      color: hsl(
+        var(--nextui-foreground) /
+          var(--nextui-foreground-opacity, var(--tw-text-opacity))
+      ) !important;
+    }
+  }
+}
