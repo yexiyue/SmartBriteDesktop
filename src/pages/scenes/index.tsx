@@ -1,5 +1,5 @@
 import { Button } from "@nextui-org/button";
-import CreateScenes, { CreateScenesRef } from "../../components/CreateScenes";
+import CreateScenes, { CreateScenesRef } from "../../components/createScenes";
 import { useMemo, useRef, useState } from "react";
 import { Inbox, Microscope, PlusIcon, SearchIcon } from "lucide-react";
 import { Tooltip } from "@nextui-org/tooltip";
@@ -33,7 +33,7 @@ export const Scenes = () => {
 
   return (
     <div className="w-full h-full relative flex flex-col">
-      <div className="p-4 flex justify-between items-center">
+      <div className="p-4 pb-0 flex justify-between items-center">
         <Breadcrumbs variant="solid">
           <BreadcrumbItem startContent={<Microscope className="w-4 h-4" />}>
             场景
@@ -48,7 +48,7 @@ export const Scenes = () => {
           onValueChange={setSearch}
         />
       </div>
-      <ScrollShadow className="flex-1 p-4 pt-0" hideScrollBar>
+      <ScrollShadow className="flex-1 p-4" hideScrollBar>
         {searchedScenes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
             <Inbox size={24} className="text-default-500" />
@@ -105,7 +105,9 @@ export const Scenes = () => {
       </Tooltip>
       <CreateScenes
         ref={createScenesRef}
-        onCreate={addScene}
+        onCreate={(scene) => {
+          addScene(scene);
+        }}
         onEdit={updateScene}
       />
     </div>

@@ -3,7 +3,7 @@ import { Button } from "@nextui-org/button";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { connectDevice, getDevices, init, startScan, stopScan } from "../../api";
+import { connectDevice, init, startScan, stopScan, control } from "../../api";
 
 export const AddDevice = () => {
   const navigate = useNavigate();
@@ -46,6 +46,29 @@ export const AddDevice = () => {
           }}
         >
           获取设备
+        </Button>
+
+        <Button
+          onClick={async () => {
+            const res = await control(
+              "db963e8c-f710-466e-459d-31875b11d665",
+              "open"
+            );
+            console.log("开灯");
+          }}
+        >
+          开灯
+        </Button>
+        <Button
+          onClick={async () => {
+            const res = await control(
+              "db963e8c-f710-466e-459d-31875b11d665",
+              "close"
+            );
+            console.log("关灯");
+          }}
+        >
+          关灯
         </Button>
       </ScrollShadow>
     </div>

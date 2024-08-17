@@ -1,12 +1,11 @@
 import { Button } from "@nextui-org/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/card";
 import { Chip } from "@nextui-org/chip";
+import { Divider } from "@nextui-org/divider";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
-import { CirclePower, Timer, Trash2Icon } from "lucide-react";
+import { CirclePower, Trash2Icon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ScenesConfig } from "../stores/useScenesStore";
-import { Divider } from "@nextui-org/divider";
-import { useColorPicker } from "react-best-gradient-color-picker";
 import {
   Modal,
   ModalBody,
@@ -14,6 +13,7 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@nextui-org/modal";
+import chroma from "chroma-js";
 
 type SceneProps = {
   data: ScenesConfig;
@@ -22,33 +22,31 @@ type SceneProps = {
 };
 export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const { getGradientObject } = useColorPicker(data.color, () => {});
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    let timer: number;
     if (cardRef.current) {
-      cardRef.current.style.setProperty("--scene-border-color", data.color);
-      const colorObj = getGradientObject();
-      if (!colorObj?.isGradient) {
-        cardRef.current.style.backgroundImage = `radial-gradient(circle at 150px 40px,${colorObj?.colors[0].value} 0%,transparent 50%)`;
+      if (data.type === "solid") {
+        const color = chroma(data.color).hex("rgb");
+        cardRef.current.style.setProperty("--scene-border-color", color);
+        cardRef.current.style.backgroundImage = `radial-gradient(circle at 150px 40px,${color} 0%,transparent 50%)`;
       } else {
-        const colors = colorObj?.colors
-          .map(
-            (item: { value: string; left: number }) =>
-              `${item.value} ${Math.floor(item.left / 3)}%`
-          )
-          .join(",");
+        const colors = data.colors?.map((item) => {
+          return item.color;
+        });
+        const gradientColor = `linear-gradient(45deg,${colors.join(",")})`;
+        cardRef.current.style.setProperty(
+          "--scene-border-color",
+          gradientColor
+        );
+        const color = chroma.average(colors).css();
         cardRef.current.style.setProperty(
           "--scene-bg-gradient",
-          `radial-gradient(circle at 100% 20%,${colors},transparent 50%)`
+          `radial-gradient(circle at 150px 40px,${color} 0%,transparent 50%)`
         );
       }
     }
-    return () => {
-      clearInterval(timer);
-    };
-  }, [data.color]);
+  }, [data]);
 
   const solid = ` before:content-[''] before:absolute before:top-[-1px]  before:left-[-1px] before:bottom-[-1px] before:right-[-1px] hover:before:border hover:before:border-[var(--scene-border-color,transparent)] before:rounded-medium before:animate-clipPath
         after:content-[''] after:absolute after:top-[-1px]  after:left-[-1px] after:bottom-[-1px] after:right-[-1px] hover:after:border hover:after:border-[var(--scene-border-color,transparent)] after:rounded-medium after:animate-clipPath2
@@ -73,15 +71,6 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
         <CardBody className="py-0">
           <ScrollShadow hideScrollBar className="pt-2">
             <p className="text-default-500 text-small">{data.description}</p>
-            {data.type === "gradient" && (
-              <Chip
-                color="primary"
-                variant="flat"
-                startContent={<Timer className="w-4 h-4" />}
-              >
-                {data.duration}
-              </Chip>
-            )}
             {data.autoOn && (
               <Chip
                 color="primary"
@@ -89,6 +78,11 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
                 startContent={<CirclePower className="w-4 h-4" />}
               >
                 自动开灯
+              </Chip>
+            )}
+            {data.type === "gradient" && (
+              <Chip color="primary" variant="flat">
+                {data.linear ? "线性" : "闪烁"}
               </Chip>
             )}
           </ScrollShadow>
@@ -110,7 +104,7 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
       <Modal size="sm" isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <ModalContent>
           <ModalHeader className=" text-warning-400">警告</ModalHeader>
-          <ModalBody>
+          <ModalBody className=" text-default-600">
             删除该场景会导致某些设备不能使用，确定要删除该场景吗？
           </ModalBody>
           <ModalFooter>

@@ -13,7 +13,6 @@ import { semanticColors } from "@nextui-org/theme";
 import {
   ForwardedRef,
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -21,7 +20,9 @@ import {
 } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { ColorPopover } from "./ColorPopover";
-import { ScenesConfig, useScenesStore } from "../stores/useScenesStore";
+import { ScenesConfig, useScenesStore } from "../../stores/useScenesStore";
+import chroma from "chroma-js";
+import { Colors } from "./Colors";
 
 export type CreateScenesProps = {
   onCreate?: (config: ScenesConfig) => void;
@@ -40,27 +41,27 @@ const CreateScenes = (
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [scenes] = useScenesStore((store) => [store.scenes]);
+
   const names = useMemo(() => {
     return scenes.map((item) => item.name);
   }, [scenes]);
+
   const currentName = useRef<string>("");
-  const { control, setValue, reset, trigger } = useForm<ScenesConfig>({
-    defaultValues: {
-      type: "solid",
-      name: "",
-      color: semanticColors.light.primary[500],
-      autoOn: false,
-    },
-  });
+  const { control, setValue, reset, trigger, getValues } =
+    useForm<ScenesConfig>({
+      defaultValues: {
+        type: "solid",
+        name: "",
+        autoOn: false,
+        color: chroma(
+          semanticColors.light.warning[500] ?? "rgb(255, 165, 0)"
+        ).hex("rgb"),
+      },
+    });
+
   const data = useWatch({
     control,
   });
-
-  useEffect(() => {
-    if (data.type === "gradient") {
-      setValue("duration", 30);
-    }
-  }, [data.type]);
 
   useImperativeHandle(
     ref,
@@ -73,12 +74,14 @@ const CreateScenes = (
         setIsEdit(true);
         currentName.current = config.name;
         setValue("name", config.name);
-        setValue("color", config.color);
         setValue("autoOn", config.autoOn);
         setValue("type", config.type);
-        setValue("description", config.description);
+        setValue("description", config.description || "");
         if (config.type === "gradient") {
-          setValue("duration", config.duration);
+          setValue("linear", config.linear);
+          setValue("colors", config.colors);
+        } else {
+          setValue("color", config.color);
         }
       },
     }),
@@ -90,26 +93,47 @@ const CreateScenes = (
       isOpen={isOpen}
       onClose={() => {
         setIsOpen(false);
+        setIsEdit(false);
         reset();
       }}
     >
-      <ModalContent className="w-[380px]">
+      <ModalContent className="w-[380px] text-default-600">
         <ModalHeader>{isEdit ? "编辑场景" : "创建场景"}</ModalHeader>
         <ModalBody className="flex flex-col gap-4">
-          <Controller
-            name="type"
-            control={control}
-            render={({ field }) => (
-              <Tabs
-                size="md"
-                selectedKey={field.value}
-                onSelectionChange={field.onChange}
-              >
-                <Tab key="solid" title="单色" />
-                <Tab key="gradient" title="渐变" />
-              </Tabs>
+          <div className="flex justify-between">
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }) => (
+                <Tabs
+                  size="sm"
+                  selectedKey={field.value}
+                  onSelectionChange={field.onChange}
+                >
+                  <Tab key="solid" title="单色" />
+                  <Tab key="gradient" title="渐变" />
+                </Tabs>
+              )}
+            />
+            {data.type === "gradient" && (
+              <Controller
+                name="linear"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    isSelected={field.value}
+                    onChange={(e) => {
+                      field.onChange(e.target.checked);
+                    }}
+                    size="sm"
+                  >
+                    线性渐变
+                  </Switch>
+                )}
+              />
             )}
-          />
+          </div>
+
           <Controller
             name="name"
             control={control}
@@ -163,19 +187,39 @@ const CreateScenes = (
             )}
           />
 
-          <Controller
-            name="color"
-            control={control}
-            render={({ field }) => (
-              <ColorPopover
-                {...field}
-                type={data.type}
-                onTypeChange={(type) => {
-                  setValue("type", type);
-                }}
-              />
-            )}
-          />
+          {data.type == "solid" && (
+            <Controller
+              name="color"
+              control={control}
+              render={({ field }) => (
+                <ColorPopover
+                  value={chroma(field.value).hex("rgb")}
+                  onChange={(value) => {
+                    field.onChange(chroma(value).rgb());
+                  }}
+                />
+              )}
+            />
+          )}
+
+          {data.type == "gradient" && (
+            <Controller
+              name="colors"
+              defaultValue={[
+                {
+                  color: chroma.random().hex("rgb"),
+                  duration: 2,
+                },
+                {
+                  color: chroma.random().hex("rgb"),
+                  duration: 2,
+                },
+              ]}
+              control={control}
+              render={({ field }) => <Colors {...field} />}
+            />
+          )}
+
           <Controller
             name="autoOn"
             control={control}
@@ -185,32 +229,19 @@ const CreateScenes = (
                 onChange={(e) => {
                   field.onChange(e.target.checked);
                 }}
+                size="sm"
               >
                 自动开灯
               </Switch>
             )}
           />
-          {data.type === "gradient" && (
-            <Controller
-              name="duration"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...(field as any)}
-                  label="渐变时长"
-                  size="sm"
-                  type="number"
-                  endContent={"秒"}
-                />
-              )}
-            />
-          )}
         </ModalBody>
         <ModalFooter>
           <Button
             variant="light"
             onClick={() => {
               setIsOpen(false);
+              setIsEdit(false);
               reset();
             }}
           >
@@ -220,6 +251,7 @@ const CreateScenes = (
             color="primary"
             onClick={async () => {
               const validated = await trigger();
+              console.log(getValues());
               if (validated) {
                 if (isEdit) {
                   props.onEdit?.(currentName.current, data as any);
@@ -227,6 +259,7 @@ const CreateScenes = (
                   props.onCreate?.(data as any);
                 }
                 setIsOpen(false);
+                setIsEdit(false);
                 reset();
               }
             }}

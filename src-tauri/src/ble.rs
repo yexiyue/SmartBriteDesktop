@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use btleplug::api::{Central, CentralEvent, Peripheral, PeripheralProperties, ScanFilter};
 use btleplug::platform::PeripheralId;
 use futures::future::join_all;
@@ -5,11 +6,12 @@ use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::ipc::Channel;
-use tauri::{Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tracing::info;
 use uuid::uuid;
 
 use crate::error::{Error, Result};
+use crate::led::Led;
 use crate::state::{AppState, BleState};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -96,13 +98,51 @@ pub async fn get_devices(state: State<'_, AppState>) -> Result<Vec<Device>> {
 }
 
 #[tauri::command]
-pub async fn connect_device(state: State<'_, AppState>, id: PeripheralId) -> Result<()> {
+pub async fn connect_device(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    id: PeripheralId,
+) -> Result<()> {
     #[cfg(dev)]
     info!("connect_device id: {id}");
-
-    let ble_state = state.lock().await;
+    let mut ble_state = state.lock().await;
     let peripheral = ble_state.adapter.peripheral(&id).await?;
-    peripheral.connect().await?;
-    peripheral.discover_services().await?;
+    let led = Led::new(peripheral).await?;
+    led.check_connected().await?;
+    let led_clone = led.clone();
+    tauri::async_runtime::spawn(async move {
+        let mut notifications = led_clone.peripheral.notifications().await?;
+        while let Some(notification) = notifications.next().await {
+            let str = String::from_utf8(notification.value)?;
+            #[cfg(dev)]
+            info!("notification: {str}");
+            app.emit(&format!("state-{}", led_clone.peripheral.id()), str)?;
+        }
+        Ok::<(), anyhow::Error>(())
+    });
+    led.on_state().await?;
+
+    ble_state.leds.insert(id, led);
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn control(state: State<'_, AppState>, id: PeripheralId, command: &str) -> Result<()> {
+    #[cfg(dev)]
+    info!("control id: {id}");
+    let ble_state = state.lock().await;
+    let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
+    led.control(command.into()).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn set_scene(state: State<'_, AppState>, id: PeripheralId, scene: Value) -> Result<()> {
+    #[cfg(dev)]
+    info!("set_scene id: {id} value: {scene:#?}");
+    let ble_state = state.lock().await;
+    let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
+    led.set_scene(scene).await?;
     Ok(())
 }

@@ -1,13 +1,18 @@
+use std::collections::HashMap;
+
 use anyhow::anyhow;
 use btleplug::{
     api::Manager as _,
-    platform::{Adapter, Manager},
+    platform::{Adapter, Manager, PeripheralId},
 };
 use tauri::async_runtime::Mutex;
+
+use crate::led::Led;
 
 #[derive(Debug)]
 pub struct BleState {
     pub adapter: Adapter,
+    pub leds: HashMap<PeripheralId, Led>,
 }
 
 impl BleState {
@@ -19,7 +24,10 @@ impl BleState {
             .into_iter()
             .next()
             .ok_or(anyhow!("No adapters found"))?;
-        Ok(Self { adapter })
+        Ok(Self {
+            adapter,
+            leds: HashMap::new(),
+        })
     }
 }
 

@@ -1,25 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { Scene } from "../api/interface";
 
-export type ScenesConfig =
-  | {
-      name: string;
-      color: string;
-      type: "solid";
-      autoOn: boolean;
-      description?: string;
-      isBuiltin?: boolean;
-    }
-  | {
-      name: string;
-      color: string;
-      type: "gradient";
-      duration: number;
-      autoOn: boolean;
-      description?: string;
-      isBuiltin?: boolean;
-    };
+export type ScenesConfig = Scene & {
+  description?: string;
+  isBuiltin?: boolean;
+};
 
 type SceneState = {
   scenes: ScenesConfig[];
