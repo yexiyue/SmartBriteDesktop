@@ -27,9 +27,8 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
   useEffect(() => {
     if (cardRef.current) {
       if (data.type === "solid") {
-        const color = chroma(data.color).hex("rgb");
-        cardRef.current.style.setProperty("--scene-border-color", color);
-        cardRef.current.style.backgroundImage = `radial-gradient(circle at 150px 40px,${color} 0%,transparent 50%)`;
+        cardRef.current.style.setProperty("--scene-border-color", data.color);
+        cardRef.current.style.backgroundImage = `radial-gradient(circle at 150px 40px,${data.color} 0%,transparent 50%)`;
       } else {
         const colors = data.colors?.map((item) => {
           return item.color;
@@ -58,7 +57,7 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
     <>
       <Card
         ref={cardRef}
-        className={` w-[220px] h-[158px] cursor-pointer transition-all relative overflow-visible z-10
+        className={` w-[220px] h-[158px] cursor-pointer transition-all relative overflow-visible z-10 flex-shrink-0
           ${data.type === "solid" ? solid : gradient}
         `}
         isPressable

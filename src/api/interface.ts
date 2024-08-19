@@ -18,4 +18,5 @@ export type ColorDuration = {
 export type Device = {
   id: string;
   address: string;
+  local_name: string;
 };

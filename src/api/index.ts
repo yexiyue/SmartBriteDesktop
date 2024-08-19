@@ -6,9 +6,9 @@ export const init = () => {
   return invoke<string>("init");
 };
 
-export function startScan(cb: (data: Device[]) => void) {
+export function startScan(cb?: (data: Device[]) => void) {
   const channel = new Channel<Device[]>();
-  channel.onmessage = cb;
+  channel.onmessage = cb || (() => {});
   return invoke<void>("start_scan", {
     channel,
   });
@@ -22,8 +22,14 @@ export function getDevices() {
   return invoke<Device[]>("get_devices");
 }
 
-export function connectDevice(id: string) {
-  return invoke<void>("connect_device", {
+export function connect(id: string) {
+  return invoke<Device>("connect", {
+    id,
+  });
+}
+
+export function disconnect(id: string) {
+  return invoke<void>("disconnect", {
     id,
   });
 }
@@ -39,6 +45,12 @@ export function setScene(id: string, scene: Scene) {
   return invoke<void>("set_scene", {
     id,
     scene,
+  });
+}
+
+export function getScene(id: string) {
+  return invoke<Scene>("get_scene", {
+    id,
   });
 }
 

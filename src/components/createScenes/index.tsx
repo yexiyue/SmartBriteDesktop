@@ -47,7 +47,7 @@ const CreateScenes = (
   }, [scenes]);
 
   const currentName = useRef<string>("");
-  const { control, setValue, reset, trigger, getValues } =
+  const { control, setValue, reset, trigger } =
     useForm<ScenesConfig>({
       defaultValues: {
         type: "solid",
@@ -191,14 +191,7 @@ const CreateScenes = (
             <Controller
               name="color"
               control={control}
-              render={({ field }) => (
-                <ColorPopover
-                  value={chroma(field.value).hex("rgb")}
-                  onChange={(value) => {
-                    field.onChange(chroma(value).rgb());
-                  }}
-                />
-              )}
+              render={({ field }) => <ColorPopover {...field} />}
             />
           )}
 
@@ -251,7 +244,6 @@ const CreateScenes = (
             color="primary"
             onClick={async () => {
               const validated = await trigger();
-              console.log(getValues());
               if (validated) {
                 if (isEdit) {
                   props.onEdit?.(currentName.current, data as any);

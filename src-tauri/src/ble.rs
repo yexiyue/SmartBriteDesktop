@@ -38,6 +38,7 @@ pub async fn start_scan(state: State<'_, AppState>, channel: Channel<Value>) -> 
     adapter
         .start_scan(ScanFilter {
             services: vec![uuid!("e572775c-0df9-4b44-926b-b692e31d6971")],
+            // uuid!("e572775c-0df9-4b44-926b-b692e31d6971")
         })
         .await?;
 
@@ -98,18 +99,27 @@ pub async fn get_devices(state: State<'_, AppState>) -> Result<Vec<Device>> {
 }
 
 #[tauri::command]
-pub async fn connect_device(
+pub async fn connect(
     app: AppHandle,
     state: State<'_, AppState>,
     id: PeripheralId,
-) -> Result<()> {
+) -> Result<Device> {
     #[cfg(dev)]
     info!("connect_device id: {id}");
     let mut ble_state = state.lock().await;
     let peripheral = ble_state.adapter.peripheral(&id).await?;
+    let device = Device {
+        id: id.clone(),
+        properties: peripheral
+            .properties()
+            .await?
+            .ok_or(anyhow!("Device not found"))?,
+    };
+
     let led = Led::new(peripheral).await?;
     led.check_connected().await?;
     let led_clone = led.clone();
+
     tauri::async_runtime::spawn(async move {
         let mut notifications = led_clone.peripheral.notifications().await?;
         while let Some(notification) = notifications.next().await {
@@ -124,7 +134,7 @@ pub async fn connect_device(
 
     ble_state.leds.insert(id, led);
 
-    Ok(())
+    Ok(device)
 }
 
 #[tauri::command]
@@ -144,5 +154,25 @@ pub async fn set_scene(state: State<'_, AppState>, id: PeripheralId, scene: Valu
     let ble_state = state.lock().await;
     let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
     led.set_scene(scene).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_scene(state: State<'_, AppState>, id: PeripheralId) -> Result<Value> {
+    #[cfg(dev)]
+    info!("get_scene id: {id}");
+    let ble_state = state.lock().await;
+    let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
+    let scene = led.get_scene().await?;
+    Ok(scene)
+}
+
+#[tauri::command]
+pub async fn disconnect(state: State<'_, AppState>, id: PeripheralId) -> Result<()> {
+    #[cfg(dev)]
+    info!("disconnect id: {id}");
+    let mut ble_state = state.lock().await;
+    let led = ble_state.leds.remove(&id).ok_or(anyhow!("Led not found"))?;
+    led.peripheral.disconnect().await?;
     Ok(())
 }

@@ -3,36 +3,56 @@ import { NextUIProvider } from "@nextui-org/system";
 import { useAsyncEffect } from "ahooks";
 import { Outlet } from "react-router-dom";
 import { init } from "../api";
-import { ThemeProvider } from "../hooks/useTheme";
+import { ThemeProvider, useTheme } from "../hooks/useTheme";
 import { Slider } from "./Slider";
-
+import { App, ConfigProvider, theme as AntdTheme } from "antd";
 export function Layout() {
+  return (
+    <NextUIProvider locale="zh-CN">
+      <ThemeProvider>
+        <AppLayout />
+      </ThemeProvider>
+    </NextUIProvider>
+  );
+}
+
+function AppLayout() {
+  const { theme } = useTheme();
+
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm:
+          theme === "dark"
+            ? AntdTheme.darkAlgorithm
+            : AntdTheme.defaultAlgorithm,
+      }}
+    >
+      <App>
+        <MyApp />
+      </App>
+    </ConfigProvider>
+  );
+}
+
+function MyApp() {
+  const { message } = App.useApp();
   useAsyncEffect(async () => {
     try {
       await init();
     } catch (error) {
-      console.error(error);
+      message.error(`初始化失败 ${error}`);
     }
   }, []);
-
   return (
-    <NextUIProvider
-      navigate={(path) => {
-        console.log(path);
-      }}
-      locale="zh-CN"
-    >
-      <ThemeProvider>
-        <div className="flex w-full h-full">
-          <div className="w-[260px] h-full">
-            <Slider />
-          </div>
-          <Divider orientation="vertical" />
-          <div className="flex-1">
-            <Outlet />
-          </div>
-        </div>
-      </ThemeProvider>
-    </NextUIProvider>
+    <div className="flex w-screen h-screen overflow-hidden">
+      <div className="w-[260px] h-full">
+        <Slider />
+      </div>
+      <Divider orientation="vertical" />
+      <div className="flex-1">
+        <Outlet />
+      </div>
+    </div>
   );
 }
