@@ -1,7 +1,7 @@
 {
   "name": "smart-brite",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -32,7 +32,9 @@
     "@nextui-org/theme": "^2.2.9",
     "@nextui-org/tooltip": "^2.0.39",
     "@tauri-apps/api": ">=2.0.0-rc.0",
+    "@tauri-apps/plugin-dialog": "2.0.0-rc.0",
     "@tauri-apps/plugin-shell": ">=2.0.0-rc.0",
+    "@tauri-apps/plugin-updater": "2.0.0-rc.0",
     "@types/chroma-js": "^2.4.4",
     "@types/react-color": "^3.0.12",
     "ahooks": "^3.8.0",
@@ -49,6 +51,7 @@
     "zustand": "^4.5.4"
   },
   "devDependencies": {
+    "@actions/github": "^6.0.0",
     "@tauri-apps/cli": ">=2.0.0-rc.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",

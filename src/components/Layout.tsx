@@ -44,6 +44,7 @@ function MyApp() {
       message.error(`初始化失败 ${error}`);
     }
   }, []);
+
   return (
     <div className="flex w-screen h-screen overflow-hidden">
       <div className="w-[260px] h-full">

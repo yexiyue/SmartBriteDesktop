@@ -1,7 +1,7 @@
 {
   "productName": "smart-brite",
-  "version": "0.0.0",
-  "identifier": "com.tauri.dev",
+  "version": "0.1.0",
+  "identifier": "com.tauri.smart-brite",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "smart-brite",
+        "title": "SmartBrite",
         "width": 850,
         "height": 670
       }
@@ -21,6 +21,7 @@
     }
   },
   "bundle": {
+    "createUpdaterArtifacts": true,
     "active": true,
     "targets": "all",
     "icon": [
@@ -30,5 +31,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEM5REE3QzA0OTVEMjJCRTkKUldUcEs5S1ZCSHpheWUydHdRVkhvN1FOTys1QUxGMkVCbEJrSmlzM1FhTWJuenFpei9LcDlIUlMK",
+      "endpoints": [
+        "https://github.com/yexiyue/SmartBriteDesktop/releases/latest/download/latest.json"
+      ]
+    }
   }
 }
