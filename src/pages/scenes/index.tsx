@@ -5,7 +5,7 @@ import { Inbox, Microscope, PlusIcon, SearchIcon } from "lucide-react";
 import { Tooltip } from "@nextui-org/tooltip";
 import { BreadcrumbItem, Breadcrumbs } from "@nextui-org/breadcrumbs";
 import { useScenesStore } from "../../stores/useScenesStore";
-import { Scene } from "../../components/Scene";
+import { Scene } from "../../components/scenes/Scene";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Input } from "@nextui-org/input";
 

@@ -2,29 +2,48 @@ import { BreadcrumbItem, Breadcrumbs } from "@nextui-org/breadcrumbs";
 import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
-import { SearchIcon, Smartphone } from "lucide-react";
+import { cn } from "@nextui-org/theme";
+import { Tooltip } from "@nextui-org/tooltip";
+import { App } from "antd";
+import { RefreshCcw, SearchIcon, Smartphone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DeviceItem } from "../../components/DeviceItem";
+import { getDevices, startScan, stopScan } from "../../api";
+import { Device } from "../../api/interface";
+import { DeviceItem } from "../../components/devices/DeviceItem";
 import { useDeviceStore } from "../../stores/useDeviceStore";
-import { App } from "antd";
-import { startScan, stopScan } from "../../api";
 
 export const Devices = () => {
   const [search, setSearch] = useState("");
-  const [devices] = useDeviceStore((store) => [store.devices]);
   const navigate = useNavigate();
   const { message } = App.useApp();
-  const [scaning, setScanning] = useState(false);
+  // const [scaning, setScanning] = useState(false);
+  const [devices] = useDeviceStore((store) => [store.devices]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [data, setData] = useState<Device[]>([]);
+  const ids = new Set(data.map((item) => item.id));
+
   useEffect(() => {
-    setScanning(true);
+    // setScanning(true);
+    setRefreshing(true);
     startScan((data) => {
-      
-    }).catch((err) => {
-      message.error(err.message);
-    });
+      if (data.length > 0) {
+        setData(data);
+        // setScanning(false);
+      }
+      setRefreshing(false);
+    })
+      .then(async () => {
+        setData(await getDevices());
+      })
+      .catch((err) => {
+        message.error(err.message);
+      })
+      .finally(() => {
+        setRefreshing(false);
+      });
     setTimeout(() => {
-      startScan();
+      stopScan();
     }, 5000);
     return () => {
       stopScan();
@@ -57,11 +76,30 @@ export const Devices = () => {
           >
             添加设备
           </Button>
+          <Tooltip placement="bottom" color="primary" content={<p>刷新</p>}>
+            <Button
+              onClick={async () => {
+                setRefreshing(true);
+                setData(await getDevices());
+                setRefreshing(false);
+              }}
+              color="primary"
+              size="sm"
+              isIconOnly
+              radius="full"
+            >
+              <RefreshCcw
+                className={cn("w-4 h-4", refreshing && "animate-spin")}
+              />
+            </Button>
+          </Tooltip>
         </div>
       </div>
       <ScrollShadow className="flex-1 p-4" hideScrollBar>
         {devices.map((item) => {
-          return <DeviceItem data={item} key={item.id} />;
+          return (
+            <DeviceItem data={item} key={item.id} disable={!ids.has(item.id)} />
+          );
         })}
       </ScrollShadow>
     </div>

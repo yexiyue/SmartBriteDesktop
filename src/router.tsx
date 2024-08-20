@@ -5,7 +5,6 @@ import { Devices } from "./pages/devices";
 import { Scenes } from "./pages/scenes";
 import { Schedule } from "./pages/schedule";
 import { AddDevice } from "./pages/devices/AddDevice";
-import { DeviceConfig } from "./pages/devices/DeviceConfig";
 
 export const router = createBrowserRouter([
   {
@@ -25,16 +24,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "add",
-            children: [
-              {
-                index: true,
-                element: <AddDevice />,
-              },
-              {
-                path: ":id",
-                element: <DeviceConfig />,
-              },
-            ],
+            element: <AddDevice />,
           },
         ],
       },

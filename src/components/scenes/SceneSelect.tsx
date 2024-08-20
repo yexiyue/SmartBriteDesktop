@@ -1,5 +1,5 @@
 import { useControllableValue } from "ahooks";
-import { useScenesStore } from "../stores/useScenesStore";
+import { useScenesStore } from "../../stores/useScenesStore";
 import { Select, SelectItem } from "@nextui-org/select";
 
 type SceneSelectProps = {

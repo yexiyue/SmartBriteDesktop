@@ -3,7 +3,8 @@ mod error;
 mod led;
 mod state;
 use ble::{
-    connect, control, disconnect, get_devices, get_scene, init, set_scene, start_scan, stop_scan,
+    connect, control, disconnect, get_devices, get_scene, get_state, init, set_scene, start_scan,
+    stop_scan,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,7 +21,8 @@ pub fn run() {
             control,
             set_scene,
             get_scene,
-            disconnect
+            disconnect,
+            get_state
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

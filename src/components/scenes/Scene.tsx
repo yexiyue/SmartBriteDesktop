@@ -5,7 +5,7 @@ import { Divider } from "@nextui-org/divider";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { CirclePower, Trash2Icon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { ScenesConfig } from "../stores/useScenesStore";
+import { ScenesConfig } from "../../stores/useScenesStore";
 import {
   Modal,
   ModalBody,

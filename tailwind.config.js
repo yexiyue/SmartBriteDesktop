@@ -6,7 +6,7 @@ module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@nextui-org/theme/dist/components/(breadcrumbs|button|card|chip|code|divider|input|listbox|modal|popover|scroll-shadow|select|skeleton|spacer|spinner|toggle|tabs|ripple).js"
+    "./node_modules/@nextui-org/theme/dist/components/(breadcrumbs|button|card|chip|code|divider|dropdown|input|listbox|modal|popover|scroll-shadow|select|skeleton|spacer|spinner|toggle|tabs|ripple|menu).js"
   ],
   theme: {
     extend: {

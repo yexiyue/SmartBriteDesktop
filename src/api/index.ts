@@ -22,13 +22,13 @@ export function getDevices() {
   return invoke<Device[]>("get_devices");
 }
 
-export function connect(id: string) {
+export function connectDevice(id: string) {
   return invoke<Device>("connect", {
     id,
   });
 }
 
-export function disconnect(id: string) {
+export function disconnectDevice(id: string) {
   return invoke<void>("disconnect", {
     id,
   });
@@ -54,6 +54,16 @@ export function getScene(id: string) {
   });
 }
 
+export function getState(id: string) {
+  return invoke<"closed" | "opened">("get_state", {
+    id,
+  });
+}
+
 export function onLedState(id: string, cb: EventCallback<"opened" | "closed">) {
   return listen<"opened" | "closed">(`state-${id}`, cb);
+}
+
+export function onLedScene(id: string, cb: EventCallback<Scene>) {
+  return listen<Scene>(`scene-${id}`, cb);
 }

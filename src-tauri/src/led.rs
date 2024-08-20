@@ -101,10 +101,19 @@ impl Led {
         Ok(serde_json::from_slice(&state)?)
     }
 
+    pub async fn get_state(&self) -> Result<String> {
+        self.check_connected().await?;
+        let state = self.peripheral.read(&self.state_characteristic).await?;
+        Ok(String::from_utf8(state)?)
+    }
+
     pub async fn on_state(&self) -> Result<()> {
         self.check_connected().await?;
         self.peripheral
             .subscribe(&self.state_characteristic)
+            .await?;
+        self.peripheral
+            .subscribe(&self.scene_characteristic)
             .await?;
         Ok(())
     }

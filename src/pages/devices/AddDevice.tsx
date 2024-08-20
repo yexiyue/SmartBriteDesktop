@@ -7,24 +7,47 @@ import {
   RefreshCcw,
   Smartphone,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDevices, startScan, stopScan } from "../../api";
 import { Device } from "../../api/interface";
 import { Button } from "@nextui-org/button";
 import { Tooltip } from "@nextui-org/tooltip";
 import { App } from "antd";
+import {
+  AddDeviceModal,
+  AddDeviceModalRef,
+} from "../../components/devices/AddDeviceModal";
+import { useDeviceStore } from "../../stores/useDeviceStore";
+import { Chip } from "@nextui-org/chip";
+import { cn } from "@nextui-org/theme";
 
 export const AddDevice = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<Device[]>([]);
   const { message } = App.useApp();
+  const addDeviceModalRef = useRef<AddDeviceModalRef>(null);
+  const [devices] = useDeviceStore((store) => [store.devices]);
+  const [refreshing, setRefreshing] = useState(false);
+  const ids = useMemo(() => {
+    return new Set(devices.map((item) => item.id));
+  }, [devices]);
+
   useEffect(() => {
+    setRefreshing(true);
     startScan((data) => {
       setData(data);
-    }).catch((err) => {
-      message.error(err.message);
-    });
+      setRefreshing(false);
+    })
+      .then(async () => {
+        setData(await getDevices());
+      })
+      .catch((err) => {
+        message.error(err.message);
+      })
+      .finally(() => {
+        setRefreshing(false);
+      });
 
     return () => {
       stopScan();
@@ -46,17 +69,21 @@ export const AddDevice = () => {
           <BreadcrumbItem>添加</BreadcrumbItem>
         </Breadcrumbs>
 
-        <Tooltip placement="left" color="primary" content={<p>刷新</p>}>
+        <Tooltip placement="bottom" color="primary" content={<p>刷新</p>}>
           <Button
             onClick={async () => {
+              setRefreshing(true);
               setData(await getDevices());
+              setRefreshing(false);
             }}
             color="primary"
             size="sm"
             isIconOnly
             radius="full"
           >
-            <RefreshCcw className="w-4 h-4" />
+            <RefreshCcw
+              className={cn("w-4 h-4", refreshing && "animate-spin")}
+            />
           </Button>
         </Tooltip>
       </div>
@@ -83,18 +110,32 @@ export const AddDevice = () => {
             return (
               <Card
                 key={item.id}
-                className="w-[370px] cursor-pointer"
-                isPressable
+                className={cn(
+                  "max-w-sm dark:bg-content2 cursor-default",
+                  !ids.has(item.id) &&
+                    "hover:bg-content2 dark:hover:bg-content3 cursor-pointer"
+                )}
+                isPressable={!ids.has(item.id)}
                 onPress={() => {
-                  navigate(`/devices/add/${item.id}`);
+                  addDeviceModalRef.current?.open(item);
                 }}
               >
-                <CardBody className="text-small text-default-600 gap-3 flex-row items-center dark:bg-content2">
+                <CardBody className="text-small text-default-600 gap-3 flex-row items-center">
                   <div className="w-10 h-10 rounded-full flex justify-center items-center bg-primary-400 flex-shrink-0 text-content1">
                     <LightbulbIcon className="w-6 h-6" />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <p className="text-medium">{item.local_name || "未知"}</p>
+                    <div className="text-medium">
+                      {item.local_name || "未知"}
+                      <Chip
+                        className="rounded border ml-4 border-default-300 "
+                        color={ids.has(item.id) ? "success" : "warning"}
+                        size="sm"
+                        variant="bordered"
+                      >
+                        <span>{ids.has(item.id) ? "已添加" : "未添加"}</span>
+                      </Chip>
+                    </div>
                     <p className="text-default-500 text-nowrap">{item.id}</p>
                   </div>
                 </CardBody>
@@ -103,6 +144,7 @@ export const AddDevice = () => {
           })}
         </div>
       </ScrollShadow>
+      <AddDeviceModal ref={addDeviceModalRef} />
     </div>
   );
 };

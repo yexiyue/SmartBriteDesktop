@@ -123,10 +123,17 @@ pub async fn connect(
     tauri::async_runtime::spawn(async move {
         let mut notifications = led_clone.peripheral.notifications().await?;
         while let Some(notification) = notifications.next().await {
-            let str = String::from_utf8(notification.value)?;
-            #[cfg(dev)]
-            info!("notification: {str}");
-            app.emit(&format!("state-{}", led_clone.peripheral.id()), str)?;
+            if notification.uuid == led_clone.scene_characteristic.uuid {
+                let value: Value = serde_json::from_slice(&notification.value)?;
+                #[cfg(dev)]
+                info!("notification: {value}");
+                app.emit(&format!("scene-{}", led_clone.peripheral.id()), value)?;
+            } else if notification.uuid == led_clone.state_characteristic.uuid {
+                let str = String::from_utf8(notification.value)?;
+                #[cfg(dev)]
+                info!("notification: {str}");
+                app.emit(&format!("state-{}", led_clone.peripheral.id()), str)?;
+            }
         }
         Ok::<(), anyhow::Error>(())
     });
@@ -165,6 +172,16 @@ pub async fn get_scene(state: State<'_, AppState>, id: PeripheralId) -> Result<V
     let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
     let scene = led.get_scene().await?;
     Ok(scene)
+}
+
+#[tauri::command]
+pub async fn get_state(state: State<'_, AppState>, id: PeripheralId) -> Result<String> {
+    #[cfg(dev)]
+    info!("get_scene id: {id}");
+    let ble_state = state.lock().await;
+    let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
+    let state = led.get_state().await?;
+    Ok(state)
 }
 
 #[tauri::command]
