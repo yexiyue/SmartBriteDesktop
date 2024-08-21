@@ -21,7 +21,29 @@ type SceneActions = {
 export const useScenesStore = create(
   persist(
     immer<SceneState & SceneActions>((set) => ({
-      scenes: [],
+      scenes: [
+        {
+          type: "solid",
+          name: "default",
+          autoOn: false,
+          color: "#ffffff",
+          description: "默认场景",
+          isBuiltin: true,
+        },
+        {
+          autoOn: false,
+          color: "#f5a524",
+          colors: [
+            { color: "#FA8C16", duration: 2 },
+            { color: "#000000", duration: 2 },
+          ],
+          description: "呼吸灯",
+          linear: true,
+          name: "Breathe",
+          type: "gradient",
+          isBuiltin: true,
+        },
+      ],
       addScene: (scene) => {
         set((state) => {
           state.scenes.push(scene);

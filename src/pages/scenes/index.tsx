@@ -20,7 +20,7 @@ export const Scenes = () => {
       store.updateScene,
     ]
   );
-
+  console.log(scenes);
   const searchedScenes = useMemo(() => {
     if (search) {
       return scenes.filter((item) => {

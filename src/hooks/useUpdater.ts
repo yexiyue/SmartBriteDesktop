@@ -3,6 +3,9 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { check, CheckOptions } from "@tauri-apps/plugin-updater";
 import { useAsyncEffect, useMemoizedFn } from "ahooks";
 import { App } from "antd";
+import "dayjs/locale/zh-cn";
+import dayjs from "dayjs";
+dayjs.locale("zh-cn");
 
 type UpdaterOptions = CheckOptions & {
   manual?: boolean;
@@ -21,8 +24,6 @@ export const useUpdater = (props: UpdaterOptions = {}) => {
         try {
           const allowDownload = await ask(
             `检测到新版本 ${updater.version} 当前版本为 ${updater.currentVersion} 是否下载更新？
-            更新时间: ${updater.date}
-            更新日志: ${updater.body}
             `,
             {
               title: `提示`,

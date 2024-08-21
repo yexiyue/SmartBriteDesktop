@@ -40,7 +40,7 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
   return (
     <Dropdown isDisabled={disable}>
       <DropdownTrigger>
-        <div className="flex w-full bg-content1 shadow-medium p-4 gap-2 rounded-lg max-w-sm justify-between cursor-pointer hover:bg-content2">
+        <div className="flex  w-full bg-content1 shadow-medium p-4 gap-2 rounded-lg max-w-sm justify-between cursor-pointer hover:bg-content2 ">
           <div className="flex flex-col gap-1">
             <Chip
               color={isCollected ? "success" : "danger"}
