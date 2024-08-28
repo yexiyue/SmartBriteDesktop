@@ -41,7 +41,7 @@ export type AddTask = {
         delay: string;
       }
     | {
-        kind: "weak";
+        kind: "week";
         dayOfWeek: number;
         delay: string;
       }

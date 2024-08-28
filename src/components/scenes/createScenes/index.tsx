@@ -20,7 +20,7 @@ import {
 } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { ColorPopover } from "./ColorPopover";
-import { ScenesConfig, useScenesStore } from "../../stores/useScenesStore";
+import { ScenesConfig, useScenesStore } from "../../../stores/useScenesStore";
 import chroma from "chroma-js";
 import { Colors } from "./Colors";
 

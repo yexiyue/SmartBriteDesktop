@@ -1,5 +1,5 @@
 import { Button } from "@nextui-org/button";
-import CreateScenes, { CreateScenesRef } from "../../components/createScenes";
+import CreateScenes, { CreateScenesRef } from "../../components/scenes/createScenes";
 import { useMemo, useRef, useState } from "react";
 import { Inbox, Microscope, PlusIcon, SearchIcon } from "lucide-react";
 import { Tooltip } from "@nextui-org/tooltip";
@@ -20,7 +20,7 @@ export const Scenes = () => {
       store.updateScene,
     ]
   );
-  console.log(scenes);
+
   const searchedScenes = useMemo(() => {
     if (search) {
       return scenes.filter((item) => {
