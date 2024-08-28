@@ -4,6 +4,7 @@ use btleplug::{
     platform::Peripheral,
 };
 use serde_json::Value;
+use tracing::info;
 use uuid::uuid;
 
 #[derive(Debug, Clone)]
@@ -39,6 +40,8 @@ pub struct Led {
     pub scene_characteristic: Characteristic,
     pub control_characteristic: Characteristic,
     pub state_characteristic: Characteristic,
+    pub time_characteristic: Characteristic,
+    pub time_task_characteristic: Characteristic,
 }
 
 impl Led {
@@ -46,21 +49,33 @@ impl Led {
         peripheral.connect().await?;
         peripheral.discover_services().await?;
 
-        let characteristics = peripheral.characteristics();
+        let services = peripheral.services();
         let mut scene_characteristic = None;
         let mut control_characteristic = None;
         let mut state_characteristic = None;
-        for item in characteristics {
-            if item.service_uuid == uuid!("e572775c-0df9-4b44-926b-b692e31d6971") {
+        let mut time_characteristic = None;
+        let mut time_task_characteristic = None;
+
+        if let Some(characteristics) = services
+            .into_iter()
+            .find(|item| item.uuid == uuid!("e572775c-0df9-4b44-926b-b692e31d6971"))
+            .map(|service| service.characteristics)
+        {
+            for item in characteristics {
                 if item.uuid == uuid!("c7d7ee2f-c84b-4f5c-a2a4-e642c97a880d") {
                     scene_characteristic = Some(item);
                 } else if item.uuid == uuid!("bc00dad8-280c-49f9-9efd-3a8137594ef2") {
                     control_characteristic = Some(item);
                 } else if item.uuid == uuid!("e192efae-9626-4767-8a27-b96cb9753e10") {
                     state_characteristic = Some(item);
+                } else if item.uuid == uuid!("9ae95835-6543-4bd0-8aec-6c48fe9fd989") {
+                    time_characteristic = Some(item);
+                } else if item.uuid == uuid!("f144af69-9642-97e1-d712-9448d1b450a1") {
+                    time_task_characteristic = Some(item);
                 }
             }
         }
+
         Ok(Self {
             peripheral,
             scene_characteristic: scene_characteristic
@@ -69,6 +84,10 @@ impl Led {
                 .ok_or(anyhow!("control characteristic not found"))?,
             state_characteristic: state_characteristic
                 .ok_or(anyhow!("state characteristic not found"))?,
+            time_characteristic: time_characteristic
+                .ok_or(anyhow!("time characteristic not found"))?,
+            time_task_characteristic: time_task_characteristic
+                .ok_or(anyhow!("time task characteristic not found"))?,
         })
     }
     pub async fn control(&self, command: LedCommand) -> Result<()> {
@@ -78,6 +97,20 @@ impl Led {
             .write(
                 &self.control_characteristic,
                 command.into(),
+                WriteType::WithResponse,
+            )
+            .await?)
+    }
+
+    pub async fn set_time(&self) -> Result<()> {
+        let time = chrono::Utc::now().timestamp();
+        info!("set time {time}");
+        self.check_connected().await?;
+        Ok(self
+            .peripheral
+            .write(
+                &self.time_characteristic,
+                &chrono::Utc::now().timestamp_millis().to_ne_bytes(),
                 WriteType::WithResponse,
             )
             .await?)
@@ -101,6 +134,12 @@ impl Led {
         Ok(serde_json::from_slice(&state)?)
     }
 
+    pub async fn get_time_tasks(&self) -> Result<Value> {
+        self.check_connected().await?;
+        let state = self.peripheral.read(&self.time_task_characteristic).await?;
+        Ok(serde_json::from_slice(&state)?)
+    }
+
     pub async fn get_state(&self) -> Result<String> {
         self.check_connected().await?;
         let state = self.peripheral.read(&self.state_characteristic).await?;
@@ -115,6 +154,9 @@ impl Led {
         self.peripheral
             .subscribe(&self.scene_characteristic)
             .await?;
+        self.peripheral
+            .subscribe(&self.time_task_characteristic)
+            .await?;
         Ok(())
     }
 
@@ -123,5 +165,17 @@ impl Led {
             bail!("led device not connected")
         }
         Ok(())
+    }
+
+    pub async fn set_timer(&self, scene: Value) -> Result<()> {
+        self.check_connected().await?;
+        Ok(self
+            .peripheral
+            .write(
+                &self.time_task_characteristic,
+                scene.to_string().as_bytes(),
+                WriteType::WithResponse,
+            )
+            .await?)
     }
 }

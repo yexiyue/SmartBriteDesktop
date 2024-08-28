@@ -17,14 +17,12 @@ export const Devices = () => {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const { message } = App.useApp();
-  // const [scaning, setScanning] = useState(false);
   const [devices] = useDeviceStore((store) => [store.devices]);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<Device[]>([]);
   const ids = new Set(data.map((item) => item.id));
 
   useEffect(() => {
-    // setScanning(true);
     setRefreshing(true);
     startScan((data) => {
       if (data.length > 0) {

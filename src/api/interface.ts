@@ -20,3 +20,32 @@ export type Device = {
   address: string;
   local_name: string;
 };
+
+export type RemoveTask = {
+  type: "removeTask";
+  data: string;
+};
+
+export type AddTask = {
+  type: "addTask";
+  data: {
+    name: string;
+    operation: "open" | "close" | "reset";
+  } & (
+    | {
+        kind: "once";
+        endTime: string;
+      }
+    | {
+        kind: "day";
+        delay: string;
+      }
+    | {
+        kind: "weak";
+        dayOfWeek: number;
+        delay: string;
+      }
+  );
+};
+
+export type TimerTask = RemoveTask | AddTask;

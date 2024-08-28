@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>我们需要蓝牙权限来连接并控制您的LED设备。请允许以获得最佳体验。</string>
-</dict>
+	<dict>
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>我们需要蓝牙权限来连接并控制您的LED设备。请允许以获得最佳体验。</string>
+	</dict>
 </plist>

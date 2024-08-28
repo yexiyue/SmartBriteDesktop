@@ -1,6 +1,6 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { EventCallback, listen } from "@tauri-apps/api/event";
-import { Device, Scene } from "./interface";
+import { AddTask, Device, Scene, TimerTask } from "./interface";
 
 export const init = () => {
   return invoke<string>("init");
@@ -66,4 +66,21 @@ export function onLedState(id: string, cb: EventCallback<"opened" | "closed">) {
 
 export function onLedScene(id: string, cb: EventCallback<Scene>) {
   return listen<Scene>(`scene-${id}`, cb);
+}
+
+export function onLedTimeTasks(id: string, cb: EventCallback<AddTask[]>) {
+  return listen<AddTask[]>(`time-tasks-${id}`, cb);
+}
+
+export function setTimer(id: string, timerEvent: TimerTask) {
+  return invoke<void>("set_timer", {
+    id,
+    timerEvent,
+  });
+}
+
+export function getTimeTasks(id: string) {
+  return invoke<AddTask[]>("get_time_tasks", {
+    id,
+  });
 }

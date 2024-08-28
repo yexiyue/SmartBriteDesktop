@@ -1,3 +1,4 @@
+import { Button } from "@nextui-org/button";
 import { Chip } from "@nextui-org/chip";
 import {
   Dropdown,
@@ -9,13 +10,13 @@ import {
 import { Spinner } from "@nextui-org/spinner";
 import { Switch } from "@nextui-org/switch";
 import { cn } from "@nextui-org/theme";
-import { Lightbulb, LightbulbOff } from "lucide-react";
+import { App } from "antd";
+import { Lightbulb, LightbulbOff, RotateCcwIcon } from "lucide-react";
 import { Device } from "../../api/interface";
 import { useLedControl } from "../../hooks/useLedControl";
+import { useDeviceStore } from "../../stores/useDeviceStore";
 import { useScenesStore } from "../../stores/useScenesStore";
 import { SceneItem } from "../scenes/SceneItem";
-import { useDeviceStore } from "../../stores/useDeviceStore";
-import { App } from "antd";
 
 type DeviceItemProps = {
   data: Device;
@@ -34,6 +35,7 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
     isCollected,
     isCollecting,
     ledScene,
+    reConnect,
   } = useLedControl(disable ? undefined : data);
   const [removeDevice] = useDeviceStore((store) => [store.removeDevice]);
 
@@ -56,25 +58,30 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
 
             <SceneItem scene={ledScene} />
           </div>
-          <Switch
-            size="sm"
-            isSelected={ledState === "opened"}
-            thumbIcon={({ isSelected, className }) => {
-              if (isSelected) {
-                return <Lightbulb className={cn(className, "w-3 h-3")} />;
-              } else {
-                return <LightbulbOff className={cn(className, "w-3 h-3")} />;
-              }
-            }}
-            onValueChange={(value) => {
-              if (value) {
-                open();
-              } else {
-                close();
-              }
-            }}
-            isDisabled={!isCollected}
-          ></Switch>
+          <div className="flex flex-col items-center gap-2">
+            <Button isIconOnly size="sm" onClick={reConnect} color="primary" variant="ghost" className="border border-default" >
+              <RotateCcwIcon className="w-4 h-4" />
+            </Button>
+            <Switch
+              size="sm"
+              isSelected={ledState === "opened"}
+              thumbIcon={({ isSelected, className }) => {
+                if (isSelected) {
+                  return <Lightbulb className={cn(className, "w-3 h-3")} />;
+                } else {
+                  return <LightbulbOff className={cn(className, "w-3 h-3")} />;
+                }
+              }}
+              onValueChange={(value) => {
+                if (value) {
+                  open();
+                } else {
+                  close();
+                }
+              }}
+              isDisabled={!isCollected}
+            ></Switch>
+          </div>
         </div>
       </DropdownTrigger>
       <DropdownMenu aria-label="device-dropdown">

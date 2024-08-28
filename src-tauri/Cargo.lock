@@ -549,8 +549,10 @@ checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
 
@@ -3654,10 +3656,11 @@ checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 
 [[package]]
 name = "smart-brite"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "btleplug",
+ "chrono",
  "futures",
  "serde",
  "serde_json",
