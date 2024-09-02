@@ -84,3 +84,16 @@ export function getTimeTasks(id: string) {
     id,
   });
 }
+
+export function readValue(id: string) {
+  return invoke<any>("read_value", {
+    id,
+  });
+}
+
+export function writeValue(id: string, value: any) {
+  return invoke<void>("write_value", {
+    id,
+    value,
+  });
+}

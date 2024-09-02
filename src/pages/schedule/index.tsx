@@ -9,28 +9,28 @@ import { useTimeTaskStore } from "../../stores/useTimeTaskStore";
 import CreateTimeTask, {
   CreateTimeTaskRef,
 } from "../../components/schedule/createTimeTask";
+import { TimeTaskItem } from "../../components/schedule/TimeTaskItem";
 
 export const Schedule = () => {
   const createTimeTaskRef = useRef<CreateTimeTaskRef>(null);
   const [search, setSearch] = useState("");
-  const [scenes, addScene, removeScene, updateScene] = useTimeTaskStore(
-    (store) => [
+  const [timeTasks, addTimeTask, removeScene, updateTimeTask] =
+    useTimeTaskStore((store) => [
       store.timeTasks,
       store.addTimeTask,
       store.removeTimeTask,
       store.updateTimeTask,
-    ]
-  );
+    ]);
 
   const searchedScenes = useMemo(() => {
     if (search) {
-      return scenes.filter((item) => {
+      return timeTasks.filter((item) => {
         return item.name.includes(search);
       });
     } else {
-      return scenes;
+      return timeTasks;
     }
-  }, [scenes, search]);
+  }, [timeTasks, search]);
 
   return (
     <div className="w-full h-full relative flex flex-col">
@@ -54,9 +54,9 @@ export const Schedule = () => {
           <div className="flex flex-col items-center justify-center h-full">
             <Inbox size={24} className="text-default-500" />
             <p className="text-default-500 text-small">
-              {scenes.length === 0 ? "暂无定时任务" : "未搜索到定时任务"}
+              {timeTasks.length === 0 ? "暂无定时任务" : "未搜索到定时任务"}
             </p>
-            {scenes.length === 0 && (
+            {timeTasks.length === 0 && (
               <Button
                 onClick={() => {
                   createTimeTaskRef.current?.open();
@@ -73,7 +73,7 @@ export const Schedule = () => {
         ) : (
           <div className="flex flex-wrap gap-4">
             {searchedScenes.map((item) => {
-              return <div>{item.name}</div>;
+              return <TimeTaskItem timeTask={item} key={item.name} />;
             })}
           </div>
         )}
@@ -93,7 +93,11 @@ export const Schedule = () => {
           <PlusIcon />
         </Button>
       </Tooltip>
-      <CreateTimeTask ref={createTimeTaskRef} />
+      <CreateTimeTask
+        ref={createTimeTaskRef}
+        onCreate={addTimeTask}
+        onEdit={updateTimeTask}
+      />
     </div>
   );
 };

@@ -73,9 +73,11 @@ export const useLedControl = (device?: string | Device) => {
       connectLed(device);
     } else if (device) {
       unListenState = onLedState(device.id, (event) => {
+        console.log(event);
         setLedState(event.payload);
       });
       unListenScene = onLedScene(device.id, (event) => {
+        console.log(event);
         setLedScene(event.payload);
       });
       unListenTimeTask = onLedTimeTasks(device.id, (event) => {

@@ -53,7 +53,7 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
       <Card
         ref={cardRef}
         className={cn(
-          "w-[220px] h-[158px] cursor-pointer transition-all relative overflow-visible z-10 flex-shrink-0",
+          "w-[220px] h-[138px] cursor-pointer transition-all relative overflow-visible z-10 flex-shrink-0",
           data.type === "solid"
             ? ` before:content-[''] before:absolute before:top-[-1px]  before:left-[-1px] before:bottom-[-1px] before:right-[-1px] hover:before:border hover:before:border-[var(--scene-border-color,transparent)] before:rounded-medium before:animate-clipPath
         after:content-[''] after:absolute after:top-[-1px]  after:left-[-1px] after:bottom-[-1px] after:right-[-1px] hover:after:border hover:after:border-[var(--scene-border-color,transparent)] after:rounded-medium after:animate-clipPath2`
@@ -65,10 +65,23 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
           onClick?.(data);
         }}
       >
-        <CardHeader>{data.name}</CardHeader>
+        <CardHeader className=" justify-between items-center h-10">
+          {data.name}
+          {!data.isBuiltin && (
+            <Button
+              size="sm"
+              color="danger"
+              variant="light"
+              isIconOnly
+              onClick={() => setIsOpen(true)}
+            >
+              <Trash2Icon className="w-4 h-4" />
+            </Button>
+          )}
+        </CardHeader>
         <Divider />
         <CardBody className="py-0">
-          <ScrollShadow hideScrollBar className="pt-2 flex flex-col gap-2">
+          <ScrollShadow hideScrollBar className="p-2 flex flex-col gap-2">
             <p className="text-default-500 text-small">{data.description}</p>
             <div className="flex gap-2 items-center flex-wrap">
               {data.autoOn && (
@@ -92,19 +105,6 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
             </div>
           </ScrollShadow>
         </CardBody>
-        <CardFooter className="justify-end pt-0">
-          {!data.isBuiltin && (
-            <Button
-              size="sm"
-              color="danger"
-              variant="light"
-              isIconOnly
-              onClick={() => setIsOpen(true)}
-            >
-              <Trash2Icon className="w-4 h-4" />
-            </Button>
-          )}
-        </CardFooter>
       </Card>
       <Modal size="sm" isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <ModalContent>
@@ -124,7 +124,10 @@ export const Scene = ({ data, onClick, onDelete }: SceneProps) => {
             <Button
               color="danger"
               variant="light"
-              onClick={() => onDelete?.(data)}
+              onClick={() => {
+                onDelete?.(data);
+                setIsOpen(false);
+              }}
             >
               确定
             </Button>

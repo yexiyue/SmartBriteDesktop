@@ -7,6 +7,8 @@ use serde_json::Value;
 use tracing::info;
 use uuid::uuid;
 
+use crate::transmission::Transmission;
+
 #[derive(Debug, Clone)]
 pub enum LedCommand {
     Open,
@@ -42,6 +44,7 @@ pub struct Led {
     pub state_characteristic: Characteristic,
     pub time_characteristic: Characteristic,
     pub time_task_characteristic: Characteristic,
+    pub transmission: Transmission<Value>,
 }
 
 impl Led {
@@ -55,6 +58,7 @@ impl Led {
         let mut state_characteristic = None;
         let mut time_characteristic = None;
         let mut time_task_characteristic = None;
+        let mut test_characteristic = None;
 
         if let Some(characteristics) = services
             .into_iter()
@@ -72,10 +76,12 @@ impl Led {
                     time_characteristic = Some(item);
                 } else if item.uuid == uuid!("f144af69-9642-97e1-d712-9448d1b450a1") {
                     time_task_characteristic = Some(item);
+                } else if item.uuid == uuid!("ae0e7bca-a1bb-9533-756a-f3546bad65d6") {
+                    test_characteristic = Some(item);
                 }
             }
         }
-
+        let peripheral2 = peripheral.clone();
         Ok(Self {
             peripheral,
             scene_characteristic: scene_characteristic
@@ -88,6 +94,7 @@ impl Led {
                 .ok_or(anyhow!("time characteristic not found"))?,
             time_task_characteristic: time_task_characteristic
                 .ok_or(anyhow!("time task characteristic not found"))?,
+            transmission: Transmission::new(peripheral2, test_characteristic.unwrap())?,
         })
     }
     pub async fn control(&self, command: LedCommand) -> Result<()> {
