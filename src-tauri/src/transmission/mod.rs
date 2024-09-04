@@ -14,7 +14,7 @@ use std::{fmt::Debug, marker::PhantomData};
 pub mod meta_date;
 pub mod msg;
 
-trait DataFromBytes
+pub trait DataFromBytes
 where
     Self: Sized,
 {
@@ -28,7 +28,7 @@ where
     T: Serialize + for<'a> Deserialize<'a> + Clone + Debug + 'static,
 {
     peripheral: Peripheral,
-    characteristic: Characteristic,
+    pub characteristic: Characteristic,
     _phantom: PhantomData<T>,
 }
 
@@ -60,7 +60,7 @@ where
         while let Some(msg) = notification.next().await {
             if msg.uuid == self.characteristic.uuid {
                 let (notify_msg, _) = NotifyMessage::from_data(&msg.value);
-                tracing::info!("NotifyMessage: {:#?}", notify_msg);
+                // tracing::info!("NotifyMessage: {:#?}", notify_msg);
                 if let NotifyMessage::ReadReady(meta) = notify_msg {
                     let mut value: Vec<u8> = vec![];
                     loop {
@@ -118,10 +118,10 @@ where
         let mut notification = self.peripheral.notifications().await?;
         let mut device_mtu = 0;
         while let Some(msg) = notification.next().await {
-            tracing::warn!("notification: {:#?}", msg);
+            // tracing::warn!("notification: {:#?}", msg);
             if msg.uuid == self.characteristic.uuid {
                 let (notify_msg, _) = NotifyMessage::from_data(&msg.value);
-                tracing::info!("NotifyMessage: {:#?}", notify_msg);
+                // tracing::info!("NotifyMessage: {:#?}", notify_msg);
                 match notify_msg {
                     NotifyMessage::WriteReady { mtu } => {
                         device_mtu = mtu;
@@ -173,28 +173,5 @@ where
             }
         }
         bail!("write_value error: no notify received");
-    }
-
-    pub fn listen(&self, mut on_listen: impl FnMut(T) + Send + Sync + 'static) -> Result<()> {
-        let transmission = self.clone();
-        tauri::async_runtime::spawn(async move {
-            transmission
-                .peripheral
-                .subscribe(&transmission.characteristic)
-                .await?;
-            let mut notification = transmission.peripheral.notifications().await?;
-            while let Some(msg) = notification.next().await {
-                if msg.uuid == transmission.characteristic.uuid {
-                    let (notify_msg, _) = NotifyMessage::from_data(&msg.value);
-                    tracing::info!("NotifyMessage: {:#?}", notify_msg);
-                    if matches!(notify_msg, NotifyMessage::DataUpdate) {
-                        let data = transmission.read_value().await?;
-                        on_listen(data);
-                    }
-                }
-            }
-            Ok::<(), anyhow::Error>(())
-        });
-        Ok(())
     }
 }

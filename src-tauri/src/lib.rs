@@ -4,7 +4,7 @@ mod led;
 mod state;
 use ble::{
     connect, control, disconnect, get_devices, get_scene, get_state, get_time_tasks, init,
-    read_value, set_scene, set_timer, start_scan, stop_scan, write_value,
+    set_scene, set_timer, start_scan, stop_scan,
 };
 mod transmission;
 
@@ -29,8 +29,6 @@ pub fn run() {
             get_state,
             set_timer,
             get_time_tasks,
-            write_value,
-            read_value
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

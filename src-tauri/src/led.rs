@@ -3,11 +3,13 @@ use btleplug::{
     api::{Characteristic, Peripheral as _, WriteType},
     platform::Peripheral,
 };
+use futures::StreamExt;
 use serde_json::Value;
+use tauri::{AppHandle, Emitter};
 use tracing::info;
 use uuid::uuid;
 
-use crate::transmission::Transmission;
+use crate::transmission::{msg::NotifyMessage, DataFromBytes, Transmission};
 
 #[derive(Debug, Clone)]
 pub enum LedCommand {
@@ -39,12 +41,11 @@ impl Into<&[u8]> for LedCommand {
 #[derive(Debug, Clone)]
 pub struct Led {
     pub peripheral: Peripheral,
-    pub scene_characteristic: Characteristic,
+    pub scene_transmission: Transmission<Value>,
     pub control_characteristic: Characteristic,
     pub state_characteristic: Characteristic,
     pub time_characteristic: Characteristic,
-    pub time_task_characteristic: Characteristic,
-    pub transmission: Transmission<Value>,
+    pub time_task_transmission: Transmission<Value>,
 }
 
 impl Led {
@@ -58,7 +59,6 @@ impl Led {
         let mut state_characteristic = None;
         let mut time_characteristic = None;
         let mut time_task_characteristic = None;
-        let mut test_characteristic = None;
 
         if let Some(characteristics) = services
             .into_iter()
@@ -76,25 +76,26 @@ impl Led {
                     time_characteristic = Some(item);
                 } else if item.uuid == uuid!("f144af69-9642-97e1-d712-9448d1b450a1") {
                     time_task_characteristic = Some(item);
-                } else if item.uuid == uuid!("ae0e7bca-a1bb-9533-756a-f3546bad65d6") {
-                    test_characteristic = Some(item);
                 }
             }
         }
-        let peripheral2 = peripheral.clone();
+
         Ok(Self {
-            peripheral,
-            scene_characteristic: scene_characteristic
-                .ok_or(anyhow!("scene characteristic not found"))?,
+            scene_transmission: Transmission::new(
+                peripheral.clone(),
+                scene_characteristic.ok_or(anyhow!("scene characteristic not found"))?,
+            )?,
             control_characteristic: control_characteristic
                 .ok_or(anyhow!("control characteristic not found"))?,
             state_characteristic: state_characteristic
                 .ok_or(anyhow!("state characteristic not found"))?,
             time_characteristic: time_characteristic
                 .ok_or(anyhow!("time characteristic not found"))?,
-            time_task_characteristic: time_task_characteristic
-                .ok_or(anyhow!("time task characteristic not found"))?,
-            transmission: Transmission::new(peripheral2, test_characteristic.unwrap())?,
+            time_task_transmission: Transmission::new(
+                peripheral.clone(),
+                time_task_characteristic.ok_or(anyhow!("time task characteristic not found"))?,
+            )?,
+            peripheral,
         })
     }
     pub async fn control(&self, command: LedCommand) -> Result<()> {
@@ -125,26 +126,17 @@ impl Led {
 
     pub async fn set_scene(&self, scene: Value) -> Result<()> {
         self.check_connected().await?;
-        Ok(self
-            .peripheral
-            .write(
-                &self.scene_characteristic,
-                scene.to_string().as_bytes(),
-                WriteType::WithResponse,
-            )
-            .await?)
+        Ok(self.scene_transmission.write_value(&scene).await?)
     }
 
     pub async fn get_scene(&self) -> Result<Value> {
         self.check_connected().await?;
-        let state = self.peripheral.read(&self.scene_characteristic).await?;
-        Ok(serde_json::from_slice(&state)?)
+        Ok(self.scene_transmission.read_value().await?)
     }
 
     pub async fn get_time_tasks(&self) -> Result<Value> {
         self.check_connected().await?;
-        let state = self.peripheral.read(&self.time_task_characteristic).await?;
-        Ok(serde_json::from_slice(&state)?)
+        Ok(self.time_task_transmission.read_value().await?)
     }
 
     pub async fn get_state(&self) -> Result<String> {
@@ -153,17 +145,44 @@ impl Led {
         Ok(String::from_utf8(state)?)
     }
 
-    pub async fn on_state(&self) -> Result<()> {
+    pub async fn on_state(&self, app_handle: AppHandle) -> Result<()> {
         self.check_connected().await?;
-        self.peripheral
-            .subscribe(&self.state_characteristic)
+        let led = self.clone();
+        led.peripheral.subscribe(&led.state_characteristic).await?;
+        led.peripheral
+            .subscribe(&led.scene_transmission.characteristic)
             .await?;
-        self.peripheral
-            .subscribe(&self.scene_characteristic)
+        led.peripheral
+            .subscribe(&led.time_task_transmission.characteristic)
             .await?;
-        self.peripheral
-            .subscribe(&self.time_task_characteristic)
-            .await?;
+
+        tauri::async_runtime::spawn(async move {
+            let mut notifiactions = led.peripheral.notifications().await?;
+            while let Some(notification) = notifiactions.next().await {
+                if notification.uuid == led.state_characteristic.uuid {
+                    let value = String::from_utf8(notification.value)?;
+                    app_handle.emit(&format!("state-{}", led.peripheral.id()), value)?;
+                } else if notification.uuid == led.scene_transmission.characteristic.uuid {
+                    let (msg, _) = NotifyMessage::from_data(&notification.value);
+                    if let NotifyMessage::DataUpdate = msg {
+                        let value = led.scene_transmission.read_value().await?;
+                        app_handle.emit(&format!("scene-{}", led.peripheral.id()), value)?;
+                    } else if let NotifyMessage::Error(e) = msg {
+                        app_handle.emit(&format!("error-{}", led.peripheral.id()), e)?;
+                    }
+                } else if notification.uuid == led.time_task_transmission.characteristic.uuid {
+                    let (msg, _) = NotifyMessage::from_data(&notification.value);
+                    if let NotifyMessage::DataUpdate = msg {
+                        let value = led.time_task_transmission.read_value().await?;
+                        app_handle.emit(&format!("time-tasks-{}", led.peripheral.id()), value)?;
+                    } else if let NotifyMessage::Error(e) = msg {
+                        app_handle.emit(&format!("error-{}", led.peripheral.id()), e)?;
+                    }
+                }
+            }
+            Ok::<(), anyhow::Error>(())
+        });
+
         Ok(())
     }
 
@@ -174,15 +193,8 @@ impl Led {
         Ok(())
     }
 
-    pub async fn set_timer(&self, scene: Value) -> Result<()> {
+    pub async fn set_timer(&self, time_task: Value) -> Result<()> {
         self.check_connected().await?;
-        Ok(self
-            .peripheral
-            .write(
-                &self.time_task_characteristic,
-                scene.to_string().as_bytes(),
-                WriteType::WithResponse,
-            )
-            .await?)
+        Ok(self.time_task_transmission.write_value(&time_task).await?)
     }
 }

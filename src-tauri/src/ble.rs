@@ -6,7 +6,7 @@ use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::ipc::Channel;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Manager, State};
 use tracing::info;
 use uuid::uuid;
 
@@ -118,29 +118,7 @@ pub async fn connect(
                 .await?
                 .ok_or(anyhow!("Device not found"))?,
         };
-        let led_clone = led.clone();
-        tauri::async_runtime::spawn(async move {
-            let mut notifications = led_clone.peripheral.notifications().await?;
-            while let Some(notification) = notifications.next().await {
-                if notification.uuid == led_clone.scene_characteristic.uuid {
-                    let value: Value = serde_json::from_slice(&notification.value)?;
-                    #[cfg(dev)]
-                    info!("notification: {value}");
-                    app.emit(&format!("scene-{}", led_clone.peripheral.id()), value)?;
-                } else if notification.uuid == led_clone.state_characteristic.uuid {
-                    let str = String::from_utf8(notification.value)?;
-                    #[cfg(dev)]
-                    info!("notification: {str}");
-                    app.emit(&format!("state-{}", led_clone.peripheral.id()), str)?;
-                } else if notification.uuid == led_clone.time_task_characteristic.uuid {
-                    let value: Value = serde_json::from_slice(&notification.value)?;
-                    #[cfg(dev)]
-                    info!("notification: {value}");
-                    app.emit(&format!("time-tasks-{}", led_clone.peripheral.id()), value)?;
-                }
-            }
-            Ok::<(), anyhow::Error>(())
-        });
+        // led.on_state(app).await?;
         device
     } else {
         let peripheral = ble_state.adapter.peripheral(&id).await?;
@@ -154,31 +132,7 @@ pub async fn connect(
         let led = Led::new(peripheral).await?;
         led.check_connected().await?;
         led.set_time().await?;
-        let led_clone = led.clone();
-
-        tauri::async_runtime::spawn(async move {
-            let mut notifications = led_clone.peripheral.notifications().await?;
-            while let Some(notification) = notifications.next().await {
-                if notification.uuid == led_clone.scene_characteristic.uuid {
-                    let value: Value = serde_json::from_slice(&notification.value)?;
-                    #[cfg(dev)]
-                    info!("notification: {value}");
-                    app.emit(&format!("scene-{}", led_clone.peripheral.id()), value)?;
-                } else if notification.uuid == led_clone.state_characteristic.uuid {
-                    let str = String::from_utf8(notification.value)?;
-                    #[cfg(dev)]
-                    info!("notification: {str}");
-                    app.emit(&format!("state-{}", led_clone.peripheral.id()), str)?;
-                } else if notification.uuid == led_clone.time_task_characteristic.uuid {
-                    let value: Value = serde_json::from_slice(&notification.value)?;
-                    #[cfg(dev)]
-                    info!("notification: {value}");
-                    app.emit(&format!("time-tasks-{}", led_clone.peripheral.id()), value)?;
-                }
-            }
-            Ok::<(), anyhow::Error>(())
-        });
-        led.on_state().await?;
+        led.on_state(app).await?;
 
         ble_state.leds.insert(id, led);
         device
@@ -259,24 +213,4 @@ pub async fn set_timer(
     let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
     led.set_timer(timer_event).await?;
     Ok(())
-}
-
-#[tauri::command]
-pub async fn write_value(state: State<'_, AppState>, id: PeripheralId, value: Value) -> Result<()> {
-    #[cfg(dev)]
-    info!("write_value id: {id} value: {value:#?}");
-    let ble_state = state.lock().await;
-    let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
-    led.transmission.write_value(&value).await?;
-
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn read_value(state: State<'_, AppState>, id: PeripheralId) -> Result<Value> {
-    #[cfg(dev)]
-    info!("read_value id: {id} ");
-    let ble_state = state.lock().await;
-    let led = ble_state.leds.get(&id).ok_or(anyhow!("Led not found"))?;
-    Ok(led.transmission.read_value().await?)
 }
