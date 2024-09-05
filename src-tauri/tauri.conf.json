@@ -1,6 +1,6 @@
 {
   "productName": "smart-brite",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "identifier": "com.tauri.smart-brite",
   "build": {
     "beforeDevCommand": "pnpm dev",
