@@ -28,6 +28,8 @@ export const useLedControl = (device?: string | Device) => {
   const [timeTasks, setTimeTasks] = useState<TimeTask[]>([]);
 
   function connectLed(id: string, name?: string) {
+    setLedScene(undefined);
+    setIsCollecting(true);
     connectDevice(id)
       .then(async (data) => {
         setLedDevice(data);

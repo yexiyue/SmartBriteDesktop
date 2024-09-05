@@ -8,7 +8,7 @@ import { useMemo, useRef, useState } from "react";
 import { useTimeTaskStore } from "../../stores/useTimeTaskStore";
 import CreateTimeTask, {
   CreateTimeTaskRef,
-} from "../../components/schedule/createTimeTask";
+} from "../../components/schedule/CreateTask";
 import { TimeTaskItem } from "../../components/schedule/TimeTaskItem";
 
 export const Schedule = () => {

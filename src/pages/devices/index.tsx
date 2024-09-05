@@ -94,7 +94,7 @@ export const Devices = () => {
         </div>
       </div>
       <ScrollShadow className="flex-1 p-4" hideScrollBar>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 w-full justify-items-center">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 w-full justify-items-center">
           {devices.map((item) => {
             return (
               <DeviceItem

@@ -12,25 +12,22 @@ type MiniTimeTaskProps = {
 };
 
 function dayDelay(time1: Dayjs) {
-  let time2 = dayjs().utc();
-  let adjustedTime1 = time1;
-  if (time1.isBefore(time2)) {
-    adjustedTime1 = time1.add(1, "day");
+  let time2 = dayjs();
+  let adjustTime = time2.hour(time1.hour()).minute(time1.minute()).second(0);
+  if (adjustTime.isBefore(time2)) {
+    adjustTime = adjustTime.add(1, "day");
   }
-  // 获取小时差
-  const hoursDiff = adjustedTime1.diff(time2, "hour");
-  // 获取分钟差
-  const minutesDiff = adjustedTime1.diff(time2, "minute", true);
-  const minutes = Math.floor(Math.abs(minutesDiff % 60));
+  const minutesDiff = adjustTime.diff(time2, "minutes");
+
   return {
     days: 0,
-    hours: hoursDiff,
-    minutes: minutes,
+    hours: Math.floor(minutesDiff / 60),
+    minutes: Math.floor(minutesDiff % 60),
   };
 }
 
 function weekDelay(time1: Dayjs, targetWeekday: number) {
-  let time2 = dayjs().utc();
+  let time2 = dayjs();
 
   // 获取当前时间的星期几
   const currentWeekday = time1.day();
@@ -44,7 +41,7 @@ function weekDelay(time1: Dayjs, targetWeekday: number) {
   }
 
   // 计算目标时间点
-  const targetTime = time1.add(daysToTarget, "day");
+  const targetTime = time2.add(daysToTarget, "day").hour(time1.hour()).minute(time1.minute());
 
   // 计算剩余的时间差
   const diff = targetTime.diff(time2, "minute");
@@ -61,7 +58,7 @@ function weekDelay(time1: Dayjs, targetWeekday: number) {
 }
 
 function onceDelay(time1: Dayjs) {
-  let time2 = dayjs().utc();
+  let time2 = dayjs();
   const diff = time1.diff(time2, "minute");
   // 将总分钟数拆分成天、小时和分钟
   const totalDays = Math.floor(diff / (24 * 60));

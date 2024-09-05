@@ -23,6 +23,15 @@ import { useScenesStore } from "../../stores/useScenesStore";
 import { SceneItem } from "../scenes/SceneItem";
 import { getTime, MiniTimeTask } from "../schedule/MiniTimeTask";
 import { AddTimeTaskModal, AddTimeTaskModalRef } from "./AddTimeTaskModal";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@nextui-org/modal";
+import { TimeTask } from "../../stores/useTimeTaskStore";
+import { Skeleton } from "@nextui-org/skeleton";
 
 type DeviceItemProps = {
   data: Device;
@@ -45,11 +54,12 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
     timeTasks,
     addTimeTask,
   } = useLedControl(disable ? undefined : data);
+
   const [removeDevice] = useDeviceStore((store) => [store.removeDevice]);
   const addTimeTaskRef = useRef<AddTimeTaskModalRef>(null);
 
   const calcTimeDelayAndTask = useMemoizedFn(() => {
-    return timeTasks
+    const res = timeTasks
       .filter((item) => {
         if (item.kind === "once") {
           if (dayjs(item.endTime).diff(dayjs()) < 0) {
@@ -60,39 +70,54 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
       })
       .map((item) => [getTime(item), item] as const)
       .sort(([a], [b]) => {
+        let tagA = 0;
+        let tagB = 0;
         if (a.days > b.days) {
-          return 1;
+          tagA += 100;
+        } else if (a.days < b.days) {
+          tagB += 100;
         }
+
         if (a.hours > b.hours) {
-          return 1;
+          tagA += 10;
+        } else if (a.hours < b.hours) {
+          tagB += 10;
         }
         if (a.minutes > b.minutes) {
-          return 1;
+          tagA += 1;
+        } else if (a.minutes < b.minutes) {
+          tagB += 1;
         }
-        return -1;
-      })
-      .at(0);
+        return tagA - tagB;
+      });
+
+    return res[0];
   });
+
   const [timeDelayAndTask, setTimeDelayAndTask] = useState(
     calcTimeDelayAndTask()
   );
+
   useEffect(() => {
     setTimeDelayAndTask(calcTimeDelayAndTask());
   }, [timeTasks]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeDelayAndTask(calcTimeDelayAndTask());
-    }, 1000);
+    }, 1000 * 60);
     return () => {
       clearInterval(timer);
     };
   }, []);
+
+  const [currentDeleteTask, setCurrentDeleteTask] = useState<TimeTask>();
   return (
     <>
       <Dropdown isDisabled={disable}>
         <DropdownTrigger>
-          <div className="flex  w-full bg-content1 shadow-medium p-4 gap-2 rounded-lg max-w-sm justify-between cursor-pointer hover:bg-content2 ">
-            <div className="flex flex-col gap-1">
+          <div className="flex max-w-md w-full bg-content1 shadow-medium p-4 gap-2 rounded-lg justify-between cursor-pointer hover:bg-content2 ">
+            <div className="flex flex-col gap-1 flex-1">
               <Chip
                 color={isCollected ? "success" : "danger"}
                 variant="dot"
@@ -104,17 +129,26 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
                 {data?.local_name || "未知"}
               </Chip>
               <p className="text-tiny text-default-400">{data?.id}</p>
-              {timeDelayAndTask && (
-                <Code color="success">
-                  将在{timeDelayAndTask[0].days}天，{timeDelayAndTask[0].hours}
-                  小时，
-                  {timeDelayAndTask[0].minutes}分钟后
-                  {timeDelayAndTask[1].operation === "open" ? "开灯" : "关灯"}
-                </Code>
-              )}
-              <SceneItem scene={ledScene} />
+              <div className="flex w-full items-center gap-4">
+                <SceneItem scene={ledScene} />
+                {isCollecting ? (
+                  <Skeleton className="w-full h-7 rounded max-w-[240px]" />
+                ) : (
+                  timeDelayAndTask && (
+                    <Code color="success" className="rounded">
+                      将在{timeDelayAndTask[0].days}天，
+                      {timeDelayAndTask[0].hours}
+                      小时，
+                      {timeDelayAndTask[0].minutes}分钟后
+                      {timeDelayAndTask[1].operation === "open"
+                        ? "开灯"
+                        : "关灯"}
+                    </Code>
+                  )
+                )}
+              </div>
             </div>
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center justify-between pb-1">
               <Button
                 isIconOnly
                 size="sm"
@@ -168,10 +202,7 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
               <DropdownItem
                 key={task?.name}
                 onClick={() => {
-                  addTimeTask({
-                    type: "removeTask",
-                    data: task.name,
-                  });
+                  setCurrentDeleteTask(task);
                 }}
               >
                 <MiniTimeTask timeTask={task} />
@@ -221,6 +252,43 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
           });
         }}
       />
+      <Modal
+        isOpen={currentDeleteTask !== undefined}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setCurrentDeleteTask(undefined);
+          }
+        }}
+        className=" max-w-sm"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="text-warning-400">警告</ModalHeader>
+              <ModalBody className="text-default-600">
+                确定要移除该定时任务吗？
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  取消
+                </Button>
+                <Button
+                  color="primary"
+                  onPress={async () => {
+                    await addTimeTask({
+                      type: "removeTask",
+                      data: currentDeleteTask!.name,
+                    });
+                    setCurrentDeleteTask(undefined);
+                  }}
+                >
+                  确定
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 };

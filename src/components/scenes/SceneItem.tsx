@@ -19,7 +19,7 @@ export const SceneItem = ({ scene }: SceneItemProps) => {
     }
   }, [scene]);
   return scene ? (
-    <div className="flex gap-2 items-center">
+    <div className="flex gap-2 items-center flex-shrink-0">
       <div
         className="w-6 h-6 rounded-full border"
         style={{
