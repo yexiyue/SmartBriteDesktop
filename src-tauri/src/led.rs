@@ -144,17 +144,23 @@ impl Led {
         let state = self.peripheral.read(&self.state_characteristic).await?;
         Ok(String::from_utf8(state)?)
     }
+    pub async fn subscribe(&self) -> Result<()> {
+        self.check_connected().await?;
+        self.peripheral
+            .subscribe(&self.state_characteristic)
+            .await?;
+        self.peripheral
+            .subscribe(&self.scene_transmission.characteristic)
+            .await?;
+        self.peripheral
+            .subscribe(&self.time_task_transmission.characteristic)
+            .await?;
+        Ok(())
+    }
 
     pub async fn on_state(&self, app_handle: AppHandle) -> Result<()> {
-        self.check_connected().await?;
+        self.subscribe().await?;
         let led = self.clone();
-        led.peripheral.subscribe(&led.state_characteristic).await?;
-        led.peripheral
-            .subscribe(&led.scene_transmission.characteristic)
-            .await?;
-        led.peripheral
-            .subscribe(&led.time_task_transmission.characteristic)
-            .await?;
 
         tauri::async_runtime::spawn(async move {
             let mut notifiactions = led.peripheral.notifications().await?;

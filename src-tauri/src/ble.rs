@@ -118,7 +118,7 @@ pub async fn connect(
                 .await?
                 .ok_or(anyhow!("Device not found"))?,
         };
-        // led.on_state(app).await?;
+        led.subscribe().await?;
         device
     } else {
         let peripheral = ble_state.adapter.peripheral(&id).await?;

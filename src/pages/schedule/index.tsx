@@ -14,7 +14,7 @@ import { TimeTaskItem } from "../../components/schedule/TimeTaskItem";
 export const Schedule = () => {
   const createTimeTaskRef = useRef<CreateTimeTaskRef>(null);
   const [search, setSearch] = useState("");
-  const [timeTasks, addTimeTask, removeScene, updateTimeTask] =
+  const [timeTasks, addTimeTask, removeTimeTask, updateTimeTask] =
     useTimeTaskStore((store) => [
       store.timeTasks,
       store.addTimeTask,
@@ -73,7 +73,15 @@ export const Schedule = () => {
         ) : (
           <div className="flex flex-wrap gap-4">
             {searchedScenes.map((item) => {
-              return <TimeTaskItem timeTask={item} key={item.name} />;
+              return (
+                <TimeTaskItem
+                  timeTask={item}
+                  key={item.name}
+                  onDelete={() => {
+                    removeTimeTask(item.name);
+                  }}
+                />
+              );
             })}
           </div>
         )}

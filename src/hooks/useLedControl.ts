@@ -15,7 +15,8 @@ import {
   setScene,
   setTimer,
 } from "../api";
-import { AddTask, Device, Scene, TimerTask } from "../api/interface";
+import { Device, Scene, TimerTask } from "../api/interface";
+import { TimeTask } from "../stores/useTimeTaskStore";
 
 export const useLedControl = (device?: string | Device) => {
   const { message } = App.useApp();
@@ -24,7 +25,8 @@ export const useLedControl = (device?: string | Device) => {
   const [isCollecting, setIsCollecting] = useState(false);
   const [ledScene, setLedScene] = useState<Scene>();
   const [ledDevice, setLedDevice] = useState<Device>();
-  const [timeTasks, setTimeTasks] = useState<AddTask[]>([]);
+  const [timeTasks, setTimeTasks] = useState<TimeTask[]>([]);
+
   function connectLed(id: string, name?: string) {
     connectDevice(id)
       .then(async (data) => {
@@ -33,6 +35,7 @@ export const useLedControl = (device?: string | Device) => {
         const scene = await getScene(id);
         const state = await getState(id);
         const time_tasks = await getTimeTasks(id);
+
         setTimeTasks(time_tasks);
         setLedState(state);
         setLedScene(scene);
@@ -73,15 +76,12 @@ export const useLedControl = (device?: string | Device) => {
       connectLed(device);
     } else if (device) {
       unListenState = onLedState(device.id, (event) => {
-        console.log(event);
         setLedState(event.payload);
       });
       unListenScene = onLedScene(device.id, (event) => {
-        console.log(event);
         setLedScene(event.payload);
       });
       unListenTimeTask = onLedTimeTasks(device.id, (event) => {
-        console.log(event);
         setTimeTasks(event.payload);
       });
 

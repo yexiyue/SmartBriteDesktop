@@ -1,13 +1,10 @@
 import { parseAbsoluteToLocal } from "@internationalized/date";
 import { Button } from "@nextui-org/button";
-import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/card";
+import { Card, CardBody, CardHeader } from "@nextui-org/card";
 import { Chip } from "@nextui-org/chip";
 import { TimeInput } from "@nextui-org/date-input";
 import { DatePicker } from "@nextui-org/date-picker";
 import { Divider } from "@nextui-org/divider";
-import { Lightbulb, LightbulbOff, Trash2Icon } from "lucide-react";
-import { useState } from "react";
-import { TimeTask } from "../../stores/useTimeTaskStore";
 import {
   Modal,
   ModalBody,
@@ -15,8 +12,11 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@nextui-org/modal";
+import { Lightbulb, LightbulbOff, Trash2Icon } from "lucide-react";
+import { useState } from "react";
+import { TimeTask } from "../../stores/useTimeTaskStore";
 
-const weekdays = ["一", "二", "三", "四", "五", "六", "日"];
+export const weekdays = ["一", "二", "三", "四", "五", "六", "日"];
 
 type TimeTaskItemProps = {
   timeTask: TimeTask;
