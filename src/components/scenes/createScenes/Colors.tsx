@@ -1,11 +1,11 @@
 import { useControllableValue } from "ahooks";
-import { ColorDuration } from "../../api/interface";
 import { ColorPopover } from "./ColorPopover";
 import chroma from "chroma-js";
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
 import { HourglassIcon, TrashIcon } from "lucide-react";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
+import { ColorDuration } from "../../../api/interface";
 
 export const Colors = (props: {
   value?: ColorDuration[];

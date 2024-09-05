@@ -1,5 +1,5 @@
 import { Button } from "@nextui-org/button";
-import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/card";
+import { Card, CardBody, CardHeader } from "@nextui-org/card";
 import { Chip } from "@nextui-org/chip";
 import { Divider } from "@nextui-org/divider";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
