@@ -3,7 +3,6 @@ import { Divider } from "@nextui-org/divider";
 import { Switch } from "@nextui-org/switch";
 import {
   AlarmClock,
-  LayoutGrid,
   Microscope,
   MoonIcon,
   Settings,

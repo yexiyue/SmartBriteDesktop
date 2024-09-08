@@ -8,6 +8,14 @@ import {
   DropdownSection,
   DropdownTrigger,
 } from "@nextui-org/dropdown";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@nextui-org/modal";
+import { Skeleton } from "@nextui-org/skeleton";
 import { Spinner } from "@nextui-org/spinner";
 import { Switch } from "@nextui-org/switch";
 import { cn } from "@nextui-org/theme";
@@ -20,18 +28,10 @@ import { Device } from "../../api/interface";
 import { useLedControl } from "../../hooks/useLedControl";
 import { useDeviceStore } from "../../stores/useDeviceStore";
 import { useScenesStore } from "../../stores/useScenesStore";
+import { TimeTask } from "../../stores/useTimeTaskStore";
 import { SceneItem } from "../scenes/SceneItem";
 import { getTime, MiniTimeTask } from "../schedule/MiniTimeTask";
 import { AddTimeTaskModal, AddTimeTaskModalRef } from "./AddTimeTaskModal";
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from "@nextui-org/modal";
-import { TimeTask } from "../../stores/useTimeTaskStore";
-import { Skeleton } from "@nextui-org/skeleton";
 
 type DeviceItemProps = {
   data: Device;
@@ -183,7 +183,12 @@ export const DeviceItem = ({ data, disable }: DeviceItemProps) => {
             </div>
           </div>
         </DropdownTrigger>
-        <DropdownMenu aria-label="device-dropdown">
+        <DropdownMenu
+          aria-label="device-dropdown"
+          classNames={{
+            list: "max-h-[400px] overflow-y-auto",
+          }}
+        >
           <DropdownSection title="切换场景">
             {scenes.map((scene) => (
               <DropdownItem
