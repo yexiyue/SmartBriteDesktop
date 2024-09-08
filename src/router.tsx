@@ -1,32 +1,31 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, redirect } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { Home } from "./pages/Home";
 import { Devices } from "./pages/devices";
 import { Scenes } from "./pages/scenes";
 import { Schedule } from "./pages/schedule";
 import { AddDevice } from "./pages/devices/AddDevice";
+import { NotFound } from "./pages/NotFound";
+import { ErrorBoundary } from "./pages/ErrorBoundary";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
+    ErrorBoundary: ErrorBoundary,
     children: [
       {
         index: true,
-        element: <Home />,
+        loader: async () => {
+          return redirect("/devices");
+        },
       },
       {
         path: "/devices",
-        children: [
-          {
-            index: true,
-            element: <Devices />,
-          },
-          {
-            path: "add",
-            element: <AddDevice />,
-          },
-        ],
+        element: <Devices />,
+      },
+      {
+        path: "/devices/add",
+        element: <AddDevice />,
       },
       {
         path: "/scenes",
@@ -35,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: "/schedule",
         element: <Schedule />,
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
   },

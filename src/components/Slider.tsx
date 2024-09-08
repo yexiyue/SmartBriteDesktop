@@ -25,7 +25,7 @@ export const Slider = () => {
       </div>
       <Divider />
       <div className="flex flex-col gap-2 p-4">
-        <Button
+        {/* <Button
           onClick={() => {
             navigate("/");
           }}
@@ -34,7 +34,7 @@ export const Slider = () => {
           variant={key === "/" ? "flat" : "light"}
         >
           主页
-        </Button>
+        </Button> */}
         <Button
           onClick={() => {
             navigate("/devices");

@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from "../hooks/useTheme";
 import { Slider } from "./Slider";
 import { App, ConfigProvider, theme as AntdTheme } from "antd";
 import { useUpdater } from "../hooks/useUpdater";
+
 export function Layout() {
   return (
     <NextUIProvider locale="zh-CN">
