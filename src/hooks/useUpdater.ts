@@ -3,9 +3,6 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { check, CheckOptions } from "@tauri-apps/plugin-updater";
 import { useAsyncEffect, useMemoizedFn } from "ahooks";
 import { App } from "antd";
-import "dayjs/locale/zh-cn";
-import dayjs from "dayjs";
-dayjs.locale("zh-cn");
 
 type UpdaterOptions = CheckOptions & {
   manual?: boolean;

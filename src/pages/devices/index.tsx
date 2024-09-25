@@ -7,7 +7,7 @@ import { Tooltip } from "@nextui-org/tooltip";
 import { App } from "antd";
 import { RefreshCcw, SearchIcon, Smartphone } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { getDevices, startScan, stopScan } from "../../api";
 import { Device } from "../../api/interface";
 import { DeviceItem } from "../../components/devices/DeviceItem";
@@ -21,8 +21,10 @@ export const Devices = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<Device[]>([]);
   const ids = new Set(data.map((item) => item.id));
+  const { initialized } = useOutletContext<{ initialized: boolean }>();
 
   useEffect(() => {
+    if (!initialized) return;
     setRefreshing(true);
     startScan((data) => {
       if (data.length > 0) {
@@ -46,7 +48,7 @@ export const Devices = () => {
     return () => {
       stopScan();
     };
-  }, []);
+  }, [initialized]);
 
   return (
     <div className="w-full h-full relative flex flex-col">

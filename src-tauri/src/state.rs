@@ -24,6 +24,7 @@ impl BleState {
             .into_iter()
             .next()
             .ok_or(anyhow!("No adapters found"))?;
+
         Ok(Self {
             adapter,
             leds: HashMap::new(),

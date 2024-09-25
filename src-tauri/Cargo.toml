@@ -1,6 +1,6 @@
 [package]
 name = "smart-brite"
-version = "0.2.1"
+version = "0.2.2"
 description = "A Tauri App"
 authors = ["yexiyue <yexiyue666@qq.com>"]
 edition = "2021"
@@ -26,8 +26,8 @@ tracing-subscriber = "0.3.18"
 thiserror = "1.0.63"
 futures = "0.3.30"
 uuid = "1.10.0"
-tauri-plugin-dialog = "2.0.0-rc.2"
-tauri-plugin-process = "2.0.0-rc.0"
+tauri-plugin-dialog = "2.0.0-rc"
+tauri-plugin-process = "2.0.0-rc"
 chrono = "0.4.38"
 rand = "0.8.5"
 

@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from "../hooks/useTheme";
 import { Slider } from "./Slider";
 import { App, ConfigProvider, theme as AntdTheme } from "antd";
 import { useUpdater } from "../hooks/useUpdater";
+import { useState } from "react";
 
 export function Layout() {
   return (
@@ -39,13 +40,17 @@ function AppLayout() {
 
 function MyApp() {
   const { message } = App.useApp();
+  const [initialized, setInitialized] = useState(false);
   useAsyncEffect(async () => {
     try {
-      await init();
+      const res = await init();
+      console.log(res);
+      setInitialized(true);
     } catch (error) {
       message.error(`初始化失败 ${error}`);
     }
   }, []);
+
   useUpdater();
 
   return (
@@ -55,7 +60,7 @@ function MyApp() {
       </div>
       <Divider orientation="vertical" />
       <div className="flex-1">
-        <Outlet />
+        <Outlet context={{ initialized }} />
       </div>
     </div>
   );
